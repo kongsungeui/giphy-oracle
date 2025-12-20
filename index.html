@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yes or No?</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+
+        .buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+        }
+
+        button {
+            padding: 15px 30px;
+            font-size: 1.2em;
+            font-weight: bold;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        button:active {
+            transform: translateY(-1px);
+        }
+
+        .btn-yes {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-no {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .btn-random {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+
+        .result {
+            margin-top: 30px;
+            min-height: 100px;
+        }
+
+        .answer {
+            font-size: 3em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        .answer.yes {
+            color: #667eea;
+        }
+
+        .answer.no {
+            color: #f5576c;
+        }
+
+        .answer.maybe {
+            color: #00f2fe;
+        }
+
+        .gif-container {
+            margin-top: 20px;
+            border-radius: 10px;
+            overflow: hidden;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        .gif-container img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+        }
+
+        .loading {
+            font-size: 1.5em;
+            color: #667eea;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .error {
+            color: #f5576c;
+            font-size: 1.2em;
+            padding: 20px;
+            background: #ffe6e6;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🤔 Yes or No?</h1>
+        <div class="buttons">
+            <button class="btn-yes" onclick="askQuestion('yes')">Yes</button>
+            <button class="btn-no" onclick="askQuestion('no')">No</button>
+            <button class="btn-random" onclick="askQuestion('random')">Random</button>
+        </div>
+        <div class="result" id="result"></div>
+    </div>
+
+    <script>
+        async function askQuestion(type) {
+            const resultDiv = document.getElementById('result');
+
+            // 로딩 표시
+            resultDiv.innerHTML = '<div class="loading">🎲 Deciding...</div>';
+
+            try {
+                // API URL 구성
+                let url = 'https://yesno.wtf/api';
+                if (type !== 'random') {
+                    url += `?force=${type}`;
+                }
+
+                // API 호출
+                const response = await fetch(url);
+
+                if (!response.ok) {
+                    throw new Error('API 요청 실패');
+                }
+
+                const data = await response.json();
+
+                // 결과 표시
+                displayResult(data);
+
+            } catch (error) {
+                console.error('Error:', error);
+                resultDiv.innerHTML = `
+                    <div class="error">
+                        ⚠️ 오류가 발생했습니다. 다시 시도해주세요.
+                    </div>
+                `;
+            }
+        }
+
+        function displayResult(data) {
+            const resultDiv = document.getElementById('result');
+            const answer = data.answer.toUpperCase();
+            const answerClass = data.answer.toLowerCase();
+
+            resultDiv.innerHTML = `
+                <div class="answer ${answerClass}">${answer}</div>
+                <div class="gif-container">
+                    <img src="${data.image}" alt="${answer}" />
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
