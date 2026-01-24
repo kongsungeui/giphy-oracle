@@ -28,24 +28,36 @@ const TAROT_KEYWORDS = [
 ];
 
 export async function GET() {
+  console.log("[Tarot API] Request started");
+
   try {
     // 1. Pixabay에서 이미지 가져오기
     const keyword =
       TAROT_KEYWORDS[Math.floor(Math.random() * TAROT_KEYWORDS.length)];
     const pixabayKey = process.env.PIXABAY_API_KEY;
 
+    console.log("[Tarot API] Step 1: Fetching Pixabay images", {
+      keyword,
+      hasApiKey: !!pixabayKey,
+    });
+
     const pixabayResponse = await fetch(
       `https://pixabay.com/api/?key=${pixabayKey}&q=${encodeURIComponent(keyword)}&image_type=photo&per_page=5&safesearch=true`
     );
 
+    console.log("[Tarot API] Pixabay response status:", pixabayResponse.status);
+
     if (!pixabayResponse.ok) {
-      throw new Error("Failed to fetch images");
+      const errorText = await pixabayResponse.text();
+      console.error("[Tarot API] Pixabay error response:", errorText);
+      throw new Error(`Failed to fetch images: ${pixabayResponse.status}`);
     }
 
     const pixabayData: PixabayResponse = await pixabayResponse.json();
+    console.log("[Tarot API] Pixabay hits count:", pixabayData.hits?.length);
 
     if (!pixabayData.hits || pixabayData.hits.length < 3) {
-      throw new Error("Not enough images");
+      throw new Error(`Not enough images: got ${pixabayData.hits?.length ?? 0}`);
     }
 
     const shuffled = pixabayData.hits.sort(() => Math.random() - 0.5);
@@ -53,6 +65,11 @@ export async function GET() {
 
     // 2. Anthropic API로 점괘 생성 (fetch 직접 사용 - Edge 호환)
     const anthropicKey = process.env.ANTHROPIC_API_KEY;
+
+    console.log("[Tarot API] Step 2: Calling Anthropic API", {
+      hasApiKey: !!anthropicKey,
+      selectedTags: selectedImages.map((img) => img.tags),
+    });
 
     const anthropicResponse = await fetch(
       "https://api.anthropic.com/v1/messages",
@@ -90,20 +107,34 @@ export async function GET() {
       }
     );
 
+    console.log(
+      "[Tarot API] Anthropic response status:",
+      anthropicResponse.status
+    );
+
     if (!anthropicResponse.ok) {
-      throw new Error("Failed to generate fortune");
+      const errorText = await anthropicResponse.text();
+      console.error("[Tarot API] Anthropic error response:", errorText);
+      throw new Error(`Failed to generate fortune: ${anthropicResponse.status}`);
     }
 
     const anthropicData = await anthropicResponse.json();
     const responseText = anthropicData.content[0]?.text || "";
 
+    console.log("[Tarot API] Step 3: Parsing response", {
+      responseLength: responseText.length,
+    });
+
     // JSON 파싱
     const jsonMatch = responseText.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
+      console.error("[Tarot API] Failed to parse JSON from:", responseText);
       throw new Error("Failed to parse fortune");
     }
 
     const fortune = JSON.parse(jsonMatch[0]);
+
+    console.log("[Tarot API] Success - returning response");
 
     return NextResponse.json({
       images: selectedImages.map((img) => ({
@@ -114,9 +145,15 @@ export async function GET() {
       fortune,
     });
   } catch (error) {
-    console.error("Tarot API error:", error);
+    console.error("[Tarot API] Error:", {
+      message: error instanceof Error ? error.message : "Unknown error",
+      stack: error instanceof Error ? error.stack : undefined,
+    });
     return NextResponse.json(
-      { error: "Failed to draw tarot cards" },
+      {
+        error: "Failed to draw tarot cards",
+        detail: error instanceof Error ? error.message : "Unknown error",
+      },
       { status: 500 }
     );
   }
