@@ -13,18 +13,26 @@ interface PixabayResponse {
 }
 
 const TAROT_KEYWORDS = [
-  "mystical",
-  "tarot",
-  "fortune",
   "magic",
-  "stars night",
-  "moon sky",
-  "crystal ball",
-  "zodiac",
-  "celestial",
-  "astrology",
-  "spiritual",
-  "oracle",
+  "fantasy",
+  "medieval",
+  "mystical",
+  "mysterious",
+  "enchanted",
+  "ancient",
+  "ethereal",
+  "dream",
+  "cosmic",
+  "mythical",
+  "legendary",
+  "sacred",
+  "gothic",
+  "golden",
+  "dark",
+  "light",
+  "secret",
+  "hidden",
+  "journey",
 ];
 
 export async function GET() {
