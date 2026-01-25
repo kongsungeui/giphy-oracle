@@ -31,9 +31,9 @@ export async function GET() {
   console.log("[Tarot API] Request started");
 
   try {
-    // 1. Pixabay에서 이미지 가져오기
-    const keyword =
-      TAROT_KEYWORDS[Math.floor(Math.random() * TAROT_KEYWORDS.length)];
+    // 1. Pixabay에서 이미지 가져오기 (2개 랜덤 키워드 조합)
+    const shuffledKeywords = [...TAROT_KEYWORDS].sort(() => Math.random() - 0.5);
+    const keyword = shuffledKeywords.slice(0, 2).join("+");
     const pixabayKey = process.env.PIXABAY_API_KEY;
 
     console.log("[Tarot API] Step 1: Fetching Pixabay images", {
@@ -42,7 +42,7 @@ export async function GET() {
     });
 
     const pixabayResponse = await fetch(
-      `https://pixabay.com/api/?key=${pixabayKey}&q=${encodeURIComponent(keyword)}&image_type=photo&per_page=5&safesearch=true`
+      `https://pixabay.com/api/?key=${pixabayKey}&q=${encodeURIComponent(keyword)}&image_type=photo&per_page=10&safesearch=true`
     );
 
     console.log("[Tarot API] Pixabay response status:", pixabayResponse.status);
